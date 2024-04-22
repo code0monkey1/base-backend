@@ -2,8 +2,9 @@ import express, { NextFunction, Request, Response } from "express";
 import logger from "./config/logger";
 import { HttpError } from "http-errors";
 const app = express();
-import authRouter from "./routes/authRouter";
-import "express-async-errors";
+import authRouter from "./routes/auth/authRouter";
+
+app.use(express.json());
 
 app.get("/data", (req, res) => {
     res.json({ data: "yes it did" });
