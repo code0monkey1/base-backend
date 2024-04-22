@@ -1,16 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../../models/user.model";
 import createHttpError from "http-errors";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Config } from "../../config";
+import { EncryptionService } from "../../services/EncryptionService";
 export class AuthController {
+    constructor(private readonly encryptionService: EncryptionService) {}
     register = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { name, email, password } = req.body as AuthRequest;
 
             if (!name || !email || !password) {
-                const error = createHttpError(400, "No body provided");
+                const error = createHttpError(400, "Validation Error");
                 throw error;
             }
 
@@ -25,7 +26,8 @@ export class AuthController {
             const newUser = await User.create({
                 name,
                 email,
-                hashedPassword: await bcrypt.hash(password, 10),
+                hashedPassword:
+                    await this.encryptionService.generateHash(password),
             });
 
             // create a token
@@ -36,14 +38,7 @@ export class AuthController {
             res.cookie("authToken", token, {
                 domain: "localhost",
                 sameSite: "strict",
-                maxAge: 1000 * 60 * 60, // 1 hour
-                httpOnly: true, // this ensures that the cookie can be only taken by server
-            });
-
-            res.cookie("refreshToken", token, {
-                domain: "localhost",
-                sameSite: "strict",
-                maxAge: 1000 * 60 * 60 * 24 * 365, // 1 year
+                maxAge: 1000 * 60 * 60 * 24 * 365, // 1 hour
                 httpOnly: true, // this ensures that the cookie can be only taken by server
             });
 
