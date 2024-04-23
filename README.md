@@ -13,3 +13,11 @@
 -   [x] Error Handling Setup
 -   [x] Tests Setup
 -   [x] Create Template
+
+🧑‍💻 Checklist for auth functionality
+
+-   [-] User Registration
+-   [-] User Login
+-   [-] User Logout
+-   [-] User self endpoint
+-

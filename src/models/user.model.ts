@@ -1,7 +1,7 @@
 // create mongoose model for user
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
 );
 
 // delete the __v and the _id fields from the response object
-userSchema.set("toJSON", {
+UserSchema.set("toJSON", {
     versionKey: false,
     transform: function (doc, ret) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -35,4 +35,4 @@ userSchema.set("toJSON", {
     },
 });
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model("User", UserSchema);

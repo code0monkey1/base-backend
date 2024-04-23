@@ -33,7 +33,9 @@ export class AuthController {
             });
 
             // set access cookie
-            this.cookieService.setAccessToken(res, newUser._id.toString());
+            this.cookieService.setAccessToken(res, {
+                userId: newUser._id.toString(),
+            });
 
             res.status(201).json({ user: newUser });
         } catch (e) {
