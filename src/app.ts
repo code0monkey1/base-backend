@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import logger from "./config/logger";
 import { HttpError } from "http-errors";
 const app = express();
-import authRouter from "./routes/auth/authRouter";
+import authRouter from "./routes/auth/authentication-routes";
 
 app.use(express.json());
 
@@ -10,7 +10,7 @@ app.get("/data", (req, res) => {
     res.json({ data: "yes it did" });
 });
 
-app.use("/", authRouter);
+app.use("/auth", authRouter);
 
 app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

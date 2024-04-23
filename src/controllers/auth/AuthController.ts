@@ -1,11 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../../models/user.model";
 import createHttpError from "http-errors";
-import jwt from "jsonwebtoken";
-import { Config } from "../../config";
-import { EncryptionService } from "../../services/EncryptionService";
+import { BcryptService } from "../../services/BcryptService";
+import { CookieService } from "../../services/CookieService";
+
 export class AuthController {
-    constructor(private readonly encryptionService: EncryptionService) {}
+    constructor(
+        private readonly encryptionService: BcryptService,
+        private readonly cookieService: CookieService,
+    ) {}
     register = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { name, email, password } = req.body as AuthRequest;
@@ -26,21 +29,11 @@ export class AuthController {
             const newUser = await User.create({
                 name,
                 email,
-                hashedPassword:
-                    await this.encryptionService.generateHash(password),
+                hashedPassword: await this.encryptionService.hash(password),
             });
 
-            // create a token
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            const token = jwt.sign({ userId: newUser._id }, Config.JWT_SECRET!);
-
-            // return the jwt in the cookie
-            res.cookie("authToken", token, {
-                domain: "localhost",
-                sameSite: "strict",
-                maxAge: 1000 * 60 * 60 * 24 * 365, // 1 hour
-                httpOnly: true, // this ensures that the cookie can be only taken by server
-            });
+            // set access cookie
+            this.cookieService.setAccessToken(res, newUser._id.toString());
 
             res.status(201).json({ user: newUser });
         } catch (e) {
