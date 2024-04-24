@@ -16,8 +16,7 @@
 
 🧑‍💻 Checklist for auth functionality
 
--   [-] User Registration
--   [-] User Login
--   [-] User Logout
--   [-] User self endpoint
--
+-   [ ] User Registration
+-   [ ] User Login
+-   [ ] User Logout
+-   [ ] User self endpoint

@@ -37,6 +37,10 @@ export class AuthController {
                 userId: newUser._id.toString(),
             });
 
+            // set refresh cookie
+
+            // create refresh token , which has it's id and expiry time
+
             res.status(201).json({ user: newUser });
         } catch (e) {
             next(e);

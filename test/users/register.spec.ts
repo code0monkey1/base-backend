@@ -81,7 +81,7 @@ describe("PORT /register", () => {
         ).toBeTruthy();
     });
 
-    it("should return accessToken  inside a cookie", async () => {
+    it("should return accessToken and refreshToken  inside a cookie", async () => {
         //arrange
         const user = {
             name: "test",
@@ -97,6 +97,7 @@ describe("PORT /register", () => {
         }
 
         let accessToken = "";
+        let refreshToken = "";
 
         // assert
         expect(response.headers["set-cookie"]).toBeDefined();
@@ -107,10 +108,14 @@ describe("PORT /register", () => {
         cookies.forEach((c) => {
             if (c.startsWith("accessToken="))
                 accessToken = c.split(";")[0].split("=")[1];
+            if (c.startsWith("refreshToken="))
+                refreshToken = c.split(";")[0].split("=")[1];
         });
 
         expect(accessToken).toBeTruthy();
+        expect(refreshToken).toBeTruthy();
 
         expect(isJwt(accessToken)).toBeTruthy();
+        expect(isJwt(refreshToken)).toBeTruthy();
     });
 });
