@@ -1,7 +1,11 @@
 // create mongoose model for user
-import mongoose from "mongoose";
-
-const UserSchema = new mongoose.Schema(
+import { Schema, model } from "mongoose";
+export interface UserType {
+    name: string;
+    email: string;
+    hashedPassword: string;
+}
+const UserSchema = new Schema(
     {
         name: {
             type: String,
@@ -35,4 +39,4 @@ UserSchema.set("toJSON", {
     },
 });
 
-export default mongoose.model("User", UserSchema);
+export default model("User", UserSchema);
