@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../../models/user.model";
 import createHttpError from "http-errors";
-import { BcryptService } from "../../services/BcryptService";
-import { CookieService } from "../../services/CookieService";
+import { TokenService } from "../../services/TokenService";
+import { UserService } from "../../services/UserService";
 
 export class AuthController {
     constructor(
-        private readonly encryptionService: BcryptService,
-        private readonly cookieService: CookieService,
+        private readonly cookieService: TokenService,
+        private readonly userService: UserService,
     ) {}
     register = async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -26,11 +26,11 @@ export class AuthController {
             }
 
             // create a new user
-            const newUser = await User.create({
+            const newUser = await this.userService.createUser(
                 name,
                 email,
-                hashedPassword: await this.encryptionService.hash(password),
-            });
+                password,
+            );
 
             // set access cookie
             this.cookieService.setAccessToken(res, {
@@ -50,12 +50,42 @@ export class AuthController {
         }
     };
 
-    signIn = (req: Request, res: Response) => {
+    login = async (req: Request, res: Response, next: NextFunction) => {
         // set cookies
 
-        res.status(201).json();
+        try {
+            const { name, email, password } = req.body as AuthRequest;
+
+            if (!name || !email || !password) {
+                const error = createHttpError(400, "Validation Error");
+                throw error;
+            }
+
+            const user = await this.userService.findByEmailAndPassword(
+                email,
+                password,
+            );
+
+            // set access cookie
+            this.cookieService.setAccessToken(res, {
+                userId: user?._id.toString(),
+            });
+
+            // set refresh cookie
+
+            await this.cookieService.setRefreshToken(
+                res,
+                { userId: user?._id.toString() },
+                user?._id.toString(),
+            );
+
+            res.status(201).json();
+        } catch (e) {
+            next(e);
+        }
     };
-    signOut = (req: Request, res: Response) => {
+
+    logout = (req: Request, res: Response) => {
         // clear cookies
         res.status(201).json();
     };

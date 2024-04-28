@@ -2,7 +2,7 @@ import { Response } from "express";
 import { JWTGenerator, JwtPayload } from "../interfaces/jwt/JWTGenerator";
 import RefreshToken from "../models/refresh.token.model";
 
-export class CookieService {
+export class TokenService {
     constructor(private readonly jwtService: JWTGenerator) {}
 
     setAccessToken(res: Response, jwtPayload: JwtPayload) {

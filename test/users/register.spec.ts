@@ -2,7 +2,8 @@ import supertest from "supertest";
 import app from "../../src/app";
 import bcrypt from "bcrypt";
 const api = supertest(app);
-import User, { UserType } from "../../src/models/user.model";
+import User from "../../src/models/user.model";
+import RefreshToken from "../../src/models/refresh.token.model";
 import { db } from "../../src/utils/db";
 import { isJwt } from "../../src/utils";
 import { UserRepository } from "../../src/repositories/UserRepository";
@@ -18,6 +19,7 @@ describe("PORT /register", () => {
     beforeEach(async () => {
         // delete all users created
         await User.deleteMany({});
+        await RefreshToken.deleteMany({});
     });
     afterAll(async () => {
         // disconnect db
@@ -89,7 +91,7 @@ describe("PORT /register", () => {
             ).toBeTruthy();
         });
 
-        it("should return accessToken and refreshToken  inside a cookie", async () => {
+        it("should return accessToken and refreshToken cookies in response header", async () => {
             //arrange
             const user = {
                 name: "test",
