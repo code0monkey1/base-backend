@@ -11,8 +11,12 @@ export class UserRepository {
     public async findByEmail(email: string) {
         return await User.findOne({ email });
     }
-    public async delete() {}
-    public async findById() {}
+    public async delete(userId: string) {
+        return await User.findByIdAndDelete(userId);
+    }
+    public async findById(userId: string) {
+        return await User.findById(userId);
+    }
     public async findAll() {
         return await User.find();
     }

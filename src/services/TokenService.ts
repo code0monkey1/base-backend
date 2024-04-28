@@ -1,9 +1,12 @@
 import { Response } from "express";
 import { JWTGenerator, JwtPayload } from "../interfaces/jwt/JWTGenerator";
-import RefreshToken from "../models/refresh.token.model";
+import { RefreshTokenRepository } from "../repositories/RefreshTokenRepository";
 
 export class TokenService {
-    constructor(private readonly jwtService: JWTGenerator) {}
+    constructor(
+        private readonly jwtService: JWTGenerator,
+        private readonly refreshTokenRepository: RefreshTokenRepository,
+    ) {}
 
     setAccessToken(res: Response, jwtPayload: JwtPayload) {
         const token = this.jwtService.generate(jwtPayload);
@@ -48,13 +51,12 @@ export class TokenService {
 
     async persistRefreshToken(user: string, years_to_persist = 1) {
         //persist jwt  , should have user and expiry time
-        const YEARS = 60 * 60 * 24 * 365 * years_to_persist;
-
-        //persist
-        const refreshToken = await RefreshToken.create({
-            user,
-            expiresAt: new Date(Date.now() + YEARS),
-        });
+        const YEARS = 1000 * 60 * 60 * 24 * 365 * years_to_persist;
+        const refreshToken =
+            await this.refreshTokenRepository.createRefreshToken({
+                user,
+                expiresAt: new Date(Date.now() + YEARS),
+            });
 
         return refreshToken;
     }
