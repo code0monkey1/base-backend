@@ -1,12 +1,13 @@
 import supertest from "supertest";
 import app from "../../src/app";
 import bcrypt from "bcrypt";
-const api = supertest(app);
 import User from "../../src/models/user.model";
 import RefreshToken from "../../src/models/refresh.token.model";
 import { db } from "../../src/utils/db";
 import { isJwt } from "../../src/utils";
 import { UserRepository } from "../../src/repositories/UserRepository";
+
+const api = supertest(app);
 const BASE_URL = "/auth/register";
 
 let userRepository: UserRepository;
@@ -32,32 +33,22 @@ describe("PORT /register", () => {
         });
 
         it("should return valid json response", async () => {
-            await api
-                .post(BASE_URL)
-                .expect("Content-Type", /application\/json/);
-        });
-
-        it("should return 400 status if user already exists ", async () => {
             const user = {
                 name: "test",
                 email: "test@gmail.com",
-                password: "test",
+                password: "testing_right",
             };
-
-            await userRepository.create({
-                name: user.name,
-                email: user.email,
-                hashedPassword: await bcrypt.hash(user.password, 10),
-            });
-
-            await api.post(BASE_URL).send(user).expect(400);
+            await api
+                .post(BASE_URL)
+                .send(user)
+                .expect("Content-Type", /application\/json/);
         });
 
         it("should return status 201,user should be created ", async () => {
             const user = {
                 name: "test",
                 email: "test@gmail.com",
-                password: "test",
+                password: "testfhsr",
             };
             await api.post(BASE_URL).send(user).expect(201);
             const users = await userRepository.findAll();
@@ -71,7 +62,7 @@ describe("PORT /register", () => {
             const user = {
                 name: "test",
                 email: "test@gmail.com",
-                password: "test",
+                password: "testfsda",
             };
 
             //act
@@ -96,7 +87,7 @@ describe("PORT /register", () => {
             const user = {
                 name: "test",
                 email: "test@gmail.com",
-                password: "test",
+                password: "testsadf",
             };
 
             //act
@@ -128,28 +119,93 @@ describe("PORT /register", () => {
             expect(isJwt(accessToken)).toBeTruthy();
             expect(isJwt(refreshToken)).toBeTruthy();
         });
-    });
-    describe("when user data is invalid", () => {
-        it("should return 400 status code , if email exists", async () => {
-            //arrange
+
+        it("should store the refreshToken reference in the database,with created userId ", async () => {
             const user = {
-                name: "abcdef",
-                email: "c@gmail.com",
-                password: "test",
+                name: "test",
+                email: "test@gmail.com",
+                password: "testsadf",
             };
 
-            await userRepository.create({
-                ...user,
-                hashedPassword: await bcrypt.hash(user.password, 10),
+            //act
+            const response = await api.post(BASE_URL).send(user).expect(201);
+
+            const refreshTokens = await RefreshToken.find();
+
+            expect(refreshTokens).toHaveLength(1);
+
+            expect(refreshTokens[0].user.toString()).toBe(
+                response.body.user.id,
+            );
+            // verify expiry
+            expect(refreshTokens[0].expiresAt).toBeDefined();
+
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 0.99);
+
+            const expectedExpiry =
+                refreshTokens[0].expiresAt.getTime() > oneYearFromNow.getTime();
+
+            expect(expectedExpiry).toBeTruthy();
+        });
+    });
+    describe("when user data is invalid", () => {
+        describe("when user already exists", () => {
+            it("should return 400 status code , if email exists", async () => {
+                //arrange
+                const user = {
+                    name: "abcdef",
+                    email: "c@gmail.com",
+                    password: "test",
+                };
+
+                await userRepository.create({
+                    ...user,
+                    hashedPassword: await bcrypt.hash(user.password, 10),
+                });
+
+                const usersBefore = await userRepository.findAll();
+                //act // assert
+                await api.post(BASE_URL).send(user).expect(400);
+
+                const usersAfter = await userRepository.findAll();
+
+                expect(usersBefore.length).toBe(usersAfter.length);
+            });
+        });
+
+        describe("validation errors", () => {
+            it("should return 400 status code , if password is less than 8 chars exists", async () => {
+                //arrange
+                const user = {
+                    name: "abcdef",
+                    email: "c@gmail.com",
+                    password: "test",
+                };
+
+                //act // assert
+                const result = await api.post(BASE_URL).send(user).expect(400);
+
+                expect(result.body.errors).toHaveLength(1); // Expecting one validation error
+                expect(result.body.errors[0].msg).toBe(
+                    "Password must be at least 8 characters long",
+                );
             });
 
-            const usersBefore = await userRepository.findAll();
-            //act // assert
-            await api.post(BASE_URL).send(user).expect(400);
+            it("should return 400 status code , if email is invalid", async () => {
+                //arrange
+                const user = {
+                    name: "abcdef",
+                    email: "cgmail.com",
+                    password: "testdfas",
+                };
 
-            const usersAfter = await userRepository.findAll();
+                //act // assert
+                const result = await api.post(BASE_URL).send(user).expect(400);
 
-            expect(usersBefore.length).toBe(usersAfter.length);
+                expect(result.body.errors).toHaveLength(1); // Expecting one validation error
+                expect(result.body.errors[0].msg).toBe("Email should be valid");
+            });
         });
     });
 });

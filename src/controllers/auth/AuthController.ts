@@ -3,7 +3,7 @@ import User from "../../models/user.model";
 import createHttpError from "http-errors";
 import { TokenService } from "../../services/TokenService";
 import { UserService } from "../../services/UserService";
-
+import { validationResult } from "express-validator";
 export class AuthController {
     constructor(
         private readonly cookieService: TokenService,
@@ -13,9 +13,10 @@ export class AuthController {
         try {
             const { name, email, password } = req.body as AuthRequest;
 
-            if (!name || !email || !password) {
-                const error = createHttpError(400, "Validation Error");
-                throw error;
+            const result = validationResult(req);
+
+            if (!result.isEmpty()) {
+                return res.status(400).json({ errors: result.array() });
             }
 
             const user = await User.findOne({ email });
