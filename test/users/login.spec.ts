@@ -10,7 +10,7 @@ import { isJwt } from "../../src/utils/index";
 const BASE_URL = "/auth/login";
 let userRepository: UserRepository;
 
-describe("POST /login", () => {
+describe("POST /auth/login", () => {
     beforeAll(async () => {
         await db.connect();
         userRepository = new UserRepository();
@@ -75,6 +75,18 @@ describe("POST /login", () => {
     describe("when data is invalid ", () => {
         it("should return 400 status code , when no body provided", async () => {
             await api.post(BASE_URL).expect(400);
+        });
+
+        it("should return status 400 when  password not sent in request body", async () => {
+            //arrange
+
+            const user = {
+                email: "vonnaden@gmail.com",
+            };
+
+            //act
+            //assert
+            await api.post(BASE_URL).send(user).expect(400);
         });
 
         it("should return 400 if email is not registered ", async () => {

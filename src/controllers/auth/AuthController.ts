@@ -6,7 +6,7 @@ import { UserService } from "../../services/UserService";
 import { validationResult } from "express-validator";
 export class AuthController {
     constructor(
-        private readonly cookieService: TokenService,
+        private readonly tokenService: TokenService,
         private readonly userService: UserService,
     ) {}
     signup = async (req: Request, res: Response, next: NextFunction) => {
@@ -34,12 +34,12 @@ export class AuthController {
             );
 
             // set access cookie
-            this.cookieService.setAccessToken(res, {
+            this.tokenService.setAccessToken(res, {
                 userId: newUser._id.toString(),
             });
 
             // set refresh cookie
-            await this.cookieService.setRefreshToken(
+            await this.tokenService.setRefreshToken(
                 res,
                 { userId: newUser._id.toString() },
                 newUser._id.toString(),
@@ -55,11 +55,12 @@ export class AuthController {
         // set cookies
 
         try {
-            const { name, email, password } = req.body as AuthRequest;
+            const { email, password } = req.body as AuthRequest;
 
-            if (!name || !email || !password) {
-                const error = createHttpError(400, "Validation Error");
-                throw error;
+            const result = validationResult(req);
+
+            if (!result.isEmpty()) {
+                return res.status(400).json({ errors: result.array() });
             }
 
             const user = await this.userService.findByEmailAndPassword(
@@ -68,13 +69,13 @@ export class AuthController {
             );
 
             // set access cookie
-            this.cookieService.setAccessToken(res, {
+            this.tokenService.setAccessToken(res, {
                 userId: user?._id.toString(),
             });
 
             // set refresh cookie
 
-            await this.cookieService.setRefreshToken(
+            await this.tokenService.setRefreshToken(
                 res,
                 { userId: user?._id.toString() },
                 user?._id.toString(),

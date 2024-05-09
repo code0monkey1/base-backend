@@ -11,7 +11,7 @@ const api = supertest(app);
 const BASE_URL = "/auth/signup";
 
 let userRepository: UserRepository;
-describe("PORT /", () => {
+describe("POST /signup", () => {
     beforeAll(async () => {
         await db.connect();
         userRepository = new UserRepository();
