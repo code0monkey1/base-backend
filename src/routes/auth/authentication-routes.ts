@@ -8,7 +8,7 @@ const route = Router();
 
 const authController = makeAuthController();
 
-route.post("/register", registerValidator, authController.register);
+route.post("/signup", registerValidator, authController.signup);
 
 route.post("/login", authController.login);
 

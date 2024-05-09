@@ -9,7 +9,7 @@ export class AuthController {
         private readonly cookieService: TokenService,
         private readonly userService: UserService,
     ) {}
-    register = async (req: Request, res: Response, next: NextFunction) => {
+    signup = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { name, email, password } = req.body as AuthRequest;
 
