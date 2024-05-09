@@ -11,7 +11,11 @@ export class AuthController {
     ) {}
     signup = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { name, email, password } = req.body as AuthRequest;
+            const { name, email, password } = req.body as Request & {
+                name: string;
+                email: string;
+                password: string;
+            };
 
             const result = validationResult(req);
 
@@ -55,7 +59,10 @@ export class AuthController {
         // set cookies
 
         try {
-            const { email, password } = req.body as AuthRequest;
+            const { email, password } = req.body as Request & {
+                email: string;
+                password: string;
+            };
 
             const result = validationResult(req);
 
@@ -87,13 +94,34 @@ export class AuthController {
         }
     };
 
-    logout = (req: Request, res: Response) => {
-        // clear cookies
-        res.status(201).json();
+    logout = (req: Request, res: Response, next: NextFunction) => {
+        try {
+            res.end();
+        } catch (e) {
+            next(e);
+        }
     };
 }
 
-export interface AuthRequest {
+export interface AuthRequest extends Request {
+    auth: {
+        user: string;
+        refreshToken: string;
+    };
+}
+
+export interface RegisterRequest extends Request {
+    body: UserData;
+}
+
+export interface LoginRequest extends Request {
+    body: {
+        email: string;
+        password: string;
+    };
+}
+
+export interface UserData {
     name: string;
     email: string;
     password: string;

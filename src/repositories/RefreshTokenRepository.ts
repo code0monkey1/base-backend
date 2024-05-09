@@ -8,4 +8,8 @@ export class RefreshTokenRepository {
     async deleteRefreshToken(id: string) {
         return await RefreshToken.findByIdAndDelete(id);
     }
+
+    async findAll() {
+        return await RefreshToken.find();
+    }
 }
