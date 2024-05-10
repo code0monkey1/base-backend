@@ -2,7 +2,9 @@ import express, { NextFunction, Request, Response } from "express";
 import logger from "./config/logger";
 import { HttpError } from "http-errors";
 const app = express();
-import authRouter from "./routes/auth/authentication-routes";
+import authRouter from "./routes/authentication-routes";
+
+import userRouter from "./routes/user-routes";
 import cookieParse from "cookie-parser";
 
 const cookieParser = cookieParse();
@@ -16,6 +18,8 @@ app.get("/data", (req, res) => {
 app.use(cookieParser);
 
 app.use("/auth", authRouter);
+
+app.use("/users", userRouter);
 
 app.use(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

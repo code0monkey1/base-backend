@@ -1,25 +1,18 @@
 import supertest from "supertest";
 import app from "../../src/app";
 import { db } from "../../src/utils/db";
-import User, { UserType } from "../../src/models/user.model";
 import RefreshToken from "../../src/models/refresh.token.model";
 import bcrypt from "bcrypt";
 import { UserRepository } from "../../src/repositories/UserRepository";
 import { RefreshTokenRepository } from "../../src/repositories/RefreshTokenRepository";
 import jwt from "jsonwebtoken";
-import { TokenService } from "../../src/services/TokenService";
 import { Config } from "../../src/config";
-import { makeTokenService } from "../../src/factories/services/token-service-factory";
-import { makeUserService } from "../../src/factories/services/user-service-factory";
-import { JwtPayload } from "../../src/interfaces/jwt/JWTGenerator";
-import exp from "constants";
-const api = supertest(app);
 
+import User from "../../src/models/user.model";
+const api = supertest(app);
 const BASE_URL = "/auth/logout";
 const userRepository = new UserRepository();
 const refreshTokenRepository = new RefreshTokenRepository();
-
-const tokenService = makeTokenService();
 
 describe("POST /auth/logout", () => {
     beforeAll(async () => {
@@ -65,19 +58,7 @@ describe("POST /auth/logout", () => {
             });
             // create a refresh token entry to be saved
 
-            const refreshTokenEntry =
-                await refreshTokenRepository.createRefreshToken({
-                    user: userId,
-                    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
-                });
-
-            const refreshToken = jwt.sign(
-                { userId, refreshTokenId: refreshTokenEntry._id.toString() },
-                Config.JWT_SECRET!,
-                {
-                    expiresIn: "1y",
-                },
-            );
+            const refreshToken = await createRefreshToken(userId);
 
             const refreshTokensBefore = await refreshTokenRepository.findAll();
 
@@ -90,14 +71,6 @@ describe("POST /auth/logout", () => {
 
             const refreshTokensAfter = await refreshTokenRepository.findAll();
 
-            console.log(
-                "refreshTokensBefore",
-                JSON.stringify(refreshTokensBefore, null, 2),
-            );
-            console.log(
-                "refreshTokensAfter",
-                JSON.stringify(refreshTokensAfter, null, 2),
-            );
             assertRefreshTokenWasDeleted(
                 refreshTokensBefore,
                 refreshTokensAfter,
@@ -113,19 +86,19 @@ describe("POST /auth/logout", () => {
     });
 });
 
-async function createRefreshToken(user: string, jwtPayload: JwtPayload) {
-    const newRefreshToken = await tokenService.persistRefreshToken(user);
+async function createRefreshToken(userId: string) {
+    const refreshTokenEntry = await refreshTokenRepository.createRefreshToken({
+        user: userId,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+    });
 
-    console.log("new refresh token", newRefreshToken);
-
-    const refreshToken = tokenService.generateRefreshToken(
+    const refreshToken = jwt.sign(
+        { userId, refreshTokenId: refreshTokenEntry._id.toString() },
+        Config.JWT_SECRET!,
         {
-            jwtPayload,
-            refreshTokenId: newRefreshToken,
+            expiresIn: "1y",
         },
-        newRefreshToken._id.toString(),
     );
-
     return refreshToken;
 }
 

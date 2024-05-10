@@ -1,6 +1,7 @@
 import createHttpError from "http-errors";
 import { UserRepository } from "../repositories/UserRepository";
 import { EncryptionService } from "./EncryptionService";
+import { UserType } from "../models/user.model";
 
 export class UserService {
     constructor(
@@ -16,6 +17,19 @@ export class UserService {
             email,
             hashedPassword,
         });
+        return user;
+    }
+
+    async findById(userId: string) {
+        const user = await this.userRepository.findById(userId);
+        return user;
+    }
+
+    async findByIdAndUpdate(
+        userId: string,
+        payload: Omit<Partial<UserType>, "password">,
+    ) {
+        const user = await this.userRepository.update(userId, payload);
         return user;
     }
 
