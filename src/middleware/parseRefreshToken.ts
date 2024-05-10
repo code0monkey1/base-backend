@@ -18,6 +18,6 @@ export type AuthCookie = {
     refreshToken: string;
 };
 export type RefreshTokenPayload = {
-    id: string;
+    refreshTokenId: string;
     userId: string;
 };

@@ -94,8 +94,20 @@ export class AuthController {
         }
     };
 
-    logout = (req: Request, res: Response, next: NextFunction) => {
+    logout = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const { refreshTokenId, userId } = (req as AuthRequest).auth;
+
+            await this.tokenService.deleteRefreshTokenOfUser(
+                refreshTokenId,
+                userId,
+            );
+
+            //remove refreshToken and accessToken from response
+
+            res.clearCookie("accessToken");
+            res.clearCookie("refreshToken");
+
             res.end();
         } catch (e) {
             next(e);
@@ -105,8 +117,8 @@ export class AuthController {
 
 export interface AuthRequest extends Request {
     auth: {
-        user: string;
-        refreshToken: string;
+        userId: string;
+        refreshTokenId: string;
     };
 }
 

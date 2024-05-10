@@ -42,9 +42,67 @@ describe("POST /auth/logout", () => {
             await api.post(BASE_URL).expect("Content-Type", /json/);
         });
 
-        it.todo(
-            "should delete refreshToken reference of the current user from the database",
-        );
+        it("should delete refreshToken reference of the current user from the database", async () => {
+            //arrange
+            const user = {
+                name: "test",
+                email: "test@gmail.com",
+                password: "testing_right",
+            };
+            const hashedPassword = await bcrypt.hash(user.password, 10);
+
+            const newUser = await userRepository.create({
+                name: user.name,
+                email: user.email,
+                hashedPassword,
+            });
+
+            // save the userId in the database
+            const userId = newUser._id.toString();
+
+            const accessToken = jwt.sign({ userId }, Config.JWT_SECRET!, {
+                expiresIn: "1h",
+            });
+            // create a refresh token entry to be saved
+
+            const refreshTokenEntry =
+                await refreshTokenRepository.createRefreshToken({
+                    user: userId,
+                    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+                });
+
+            const refreshToken = jwt.sign(
+                { userId, refreshTokenId: refreshTokenEntry._id.toString() },
+                Config.JWT_SECRET!,
+                {
+                    expiresIn: "1y",
+                },
+            );
+
+            const refreshTokensBefore = await refreshTokenRepository.findAll();
+
+            await api
+                .post(BASE_URL)
+                .set("Cookie", [
+                    `accessToken=${accessToken}; refreshToken=${refreshToken};`,
+                ])
+                .expect(200);
+
+            const refreshTokensAfter = await refreshTokenRepository.findAll();
+
+            console.log(
+                "refreshTokensBefore",
+                JSON.stringify(refreshTokensBefore, null, 2),
+            );
+            console.log(
+                "refreshTokensAfter",
+                JSON.stringify(refreshTokensAfter, null, 2),
+            );
+            assertRefreshTokenWasDeleted(
+                refreshTokensBefore,
+                refreshTokensAfter,
+            );
+        });
     });
 
     describe("unhappy path", () => {
@@ -69,4 +127,12 @@ async function createRefreshToken(user: string, jwtPayload: JwtPayload) {
     );
 
     return refreshToken;
+}
+
+async function assertRefreshTokenWasDeleted(
+    tokensBefore: any,
+    tokensAfter: any,
+) {
+    expect(tokensBefore.length).toBe(1);
+    expect(tokensAfter.length).toBe(0);
 }

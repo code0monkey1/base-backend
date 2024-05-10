@@ -5,8 +5,15 @@ export class RefreshTokenRepository {
     async createRefreshToken(refreshToken: RefreshTokenType) {
         return await RefreshToken.create(refreshToken);
     }
-    async deleteRefreshToken(id: string) {
-        return await RefreshToken.findByIdAndDelete(id);
+    async deleteRefreshTokenOfUser(refreshTokenId: string, userId: string) {
+        return await RefreshToken.findOneAndDelete({
+            _id: refreshTokenId,
+            user: userId,
+        });
+    }
+
+    async findById(id: string) {
+        return await RefreshToken.findById(id);
     }
 
     async findAll() {

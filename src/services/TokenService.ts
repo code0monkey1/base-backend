@@ -40,11 +40,14 @@ export class TokenService {
     }
 
     generateRefreshToken(jwtPayload: JwtPayload, refreshTokenId: string) {
-        const token = this.jwtService.generate(jwtPayload, {
-            expiresIn: "1y",
-            jwtId: refreshTokenId,
-            issuer: "base-backend",
-        });
+        const token = this.jwtService.generate(
+            { ...jwtPayload, refreshTokenId },
+            {
+                expiresIn: "1y",
+                jwtId: refreshTokenId,
+                issuer: "base-backend",
+            },
+        );
 
         return token;
     }
@@ -57,5 +60,12 @@ export class TokenService {
             user,
             expiresAt: new Date(Date.now() + YEARS),
         });
+    }
+
+    async deleteRefreshTokenOfUser(refreshTokenId: string, userId: string) {
+        return await this.refreshTokenRepository.deleteRefreshTokenOfUser(
+            refreshTokenId,
+            userId,
+        );
     }
 }
